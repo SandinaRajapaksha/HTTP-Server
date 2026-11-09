@@ -1,4 +1,7 @@
+
 #include "commonHeader.h"
+#pragma once
+
 #define SERVER_PORT 3490
 #define SERVER_IPV4 "192.168.248.48"
 

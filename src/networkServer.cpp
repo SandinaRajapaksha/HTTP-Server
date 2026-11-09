@@ -1,9 +1,4 @@
 #include "../include/networkServer.h"
-#include "../include/commonHeader.h"
-#include <cerrno>
-#include <cstring>
-#include <iostream>
-#include <sys/socket.h>
 
 networkServer::networkServer() {
     serverFD = socket(AF_INET, SOCK_STREAM, 0);
