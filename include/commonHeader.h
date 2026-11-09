@@ -2,12 +2,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
+#include <errno.h>
 #include <fstream>
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdexcept>
-#include <string.h>
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>

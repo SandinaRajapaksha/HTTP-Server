@@ -3,4 +3,5 @@
 
 int main() {
     networkServer serverMain;
+    serverMain.startServer();
 }
