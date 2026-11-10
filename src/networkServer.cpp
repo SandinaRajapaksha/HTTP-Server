@@ -1,10 +1,15 @@
 #include "../include/networkServer.h"
+#include "../include/commonHeader.h"
+#include "../include/requestAndResponseHandling.h"
 
 networkServer::networkServer() {
     serverFD = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFD < 0) {
         std::cout << strerror(errno) << std::endl;
     }
+
+    int opt = 1;
+    setsockopt(serverFD, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
@@ -16,7 +21,6 @@ networkServer::networkServer() {
 }
 
 networkServer::~networkServer() {
-    close(acceptFD);
     close(serverFD);
 }
 
@@ -36,17 +40,32 @@ int networkServer::startServer() {
     }
     std::cout << "Listening to port : " << SERVER_PORT << std::endl;
 
-    acceptFD = accept(serverFD, NULL, NULL);
-    if (acceptFD < 0) {
-        std::cout << "accept() error" << std::endl;
-        std::cout << strerror(errno) << std::endl;
-        return -1;
+    while (true) {
+        acceptFD = accept(serverFD, NULL, NULL);
+        if (acceptFD < 0) {
+            std::cout << "accept() error" << std::endl;
+            std::cout << strerror(errno) << std::endl;
+            return -1;
+        }
+        // route and other logic
+        httpResponse serverResponse;
+        serverResponse.statusLine["protocol"] = PROTOCOL;
+        serverResponse.statusLine["statusCode"] = "200";
+        serverResponse.statusLine["statusDesc"] = "OK";
+        serverResponse.headers["Transfer-Encoding"] = "chunked";
+
+        serverResponse.buildCompleteResponseHeader();
+        serverResponse.buildCompleteResponseBody();
+        sendAll(serverResponse.sendableFullHeaderAndStatusLine, serverResponse.body);
+        close(acceptFD);
     }
 
-    // test message
-    std::string message = "hello this is sandinas server\n";
-    send(acceptFD, message.c_str(), message.size(), 0);
-    shutdown(acceptFD, SHUT_WR);
-
     return 0;
+}
+
+int networkServer::sendAll(std::string statusLineAndHeaders, std::vector<char> httpBody) {
+    int sentBytesCountHeader = send(acceptFD, statusLineAndHeaders.c_str(), statusLineAndHeaders.size(), 0);
+    int sentBytesCountBody = send(acceptFD, httpBody.data(), httpBody.size(), 0);
+    shutdown(acceptFD, SHUT_WR);
+    return sentBytesCountHeader + sentBytesCountBody;
 }

@@ -14,7 +14,7 @@ class networkServer {
   public:
     networkServer();
     ~networkServer();
-    int sendAll();
+    int sendAll(std::string message, std::vector<char> httpBody);
     int startServer();
     void buildResponse();
 };

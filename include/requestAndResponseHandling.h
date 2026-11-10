@@ -5,7 +5,7 @@ struct httpResponse {
 
     std::unordered_map<std::string, std::string> statusLine;
     std::unordered_map<std::string, std::string> headers;
-    std::vector<uint8_t> body;
+    std::vector<char> body;
 
     httpResponse();
     void buildCompleteResponseHeader();
@@ -16,7 +16,7 @@ struct httpRequest {
     std::unordered_map<std::string, std::string> statusLine;
     std::unordered_map<std::string, std::string> headers;
 
-    std::vector<uint8_t> body;
+    std::vector<char> body;
 
     void parseThroughOriginalRequest();
 };

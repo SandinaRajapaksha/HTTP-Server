@@ -36,3 +36,8 @@ void httpResponse::buildCompleteResponseHeader() {
     }
     sendableFullHeaderAndStatusLine += "\t\n";
 }
+
+void httpResponse::buildCompleteResponseBody() {
+    std::string message = "<html><h1>hello</h1> world </html>";
+    std::vector<char> messageAsCharVector(message.begin(), message.end());
+}
