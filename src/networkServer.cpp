@@ -1,6 +1,7 @@
 #include "../include/networkServer.h"
 #include "../include/commonHeader.h"
 #include "../include/requestAndResponseHandling.h"
+#include <string>
 
 networkServer::networkServer() {
     serverFD = socket(AF_INET, SOCK_STREAM, 0);
@@ -52,10 +53,12 @@ int networkServer::startServer() {
         serverResponse.statusLine["protocol"] = PROTOCOL;
         serverResponse.statusLine["statusCode"] = "200";
         serverResponse.statusLine["statusDesc"] = "OK";
-        serverResponse.headers["Transfer-Encoding"] = "chunked";
+        serverResponse.headers["Content-Type"] = "text/html";
 
-        serverResponse.buildCompleteResponseHeader();
         serverResponse.buildCompleteResponseBody();
+        serverResponse.headers["Content-Length"] = std::to_string(serverResponse.body.size());
+        serverResponse.buildCompleteResponseHeader();
+
         sendAll(serverResponse.sendableFullHeaderAndStatusLine, serverResponse.body);
         close(acceptFD);
     }
@@ -63,9 +66,11 @@ int networkServer::startServer() {
     return 0;
 }
 
-int networkServer::sendAll(std::string statusLineAndHeaders, std::vector<char> httpBody) {
+int networkServer::sendAll(std::string &statusLineAndHeaders, std::vector<char> &httpBody) {
+
+    std::string bodyMessage(httpBody.begin(), httpBody.end());
     int sentBytesCountHeader = send(acceptFD, statusLineAndHeaders.c_str(), statusLineAndHeaders.size(), 0);
-    int sentBytesCountBody = send(acceptFD, httpBody.data(), httpBody.size(), 0);
+    int sentBytesCountBody = send(acceptFD, bodyMessage.c_str(), bodyMessage.size(), 0);
     shutdown(acceptFD, SHUT_WR);
     return sentBytesCountHeader + sentBytesCountBody;
 }

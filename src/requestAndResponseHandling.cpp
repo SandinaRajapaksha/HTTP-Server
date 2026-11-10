@@ -22,22 +22,23 @@ httpResponse::httpResponse() {
 void httpResponse::buildCompleteResponseHeader() {
     sendableFullHeaderAndStatusLine += (statusLine["protocol"] + " ");
     if (statusLine["statusDesc"] == "") {
-        sendableFullHeaderAndStatusLine += (statusLine["statusCode"] + "\t\n");
+        sendableFullHeaderAndStatusLine += (statusLine["statusCode"] + "\r\n");
     } else {
         sendableFullHeaderAndStatusLine += (statusLine["statusCode"] + " ");
-        sendableFullHeaderAndStatusLine += (statusLine["statusDesc"] + "\t\n");
+        sendableFullHeaderAndStatusLine += (statusLine["statusDesc"] + "\r\n");
     }
 
     for (const auto &pair : headers) {
         if (pair.second == "") {
             continue;
         }
-        sendableFullHeaderAndStatusLine += (pair.first + ": " + pair.second + "\t\n");
+        sendableFullHeaderAndStatusLine += (pair.first + ": " + pair.second + "\r\n");
     }
-    sendableFullHeaderAndStatusLine += "\t\n";
+    sendableFullHeaderAndStatusLine += "\r\n";
 }
 
 void httpResponse::buildCompleteResponseBody() {
     std::string message = "<html><h1>hello</h1> world </html>";
     std::vector<char> messageAsCharVector(message.begin(), message.end());
+    body = messageAsCharVector;
 }
