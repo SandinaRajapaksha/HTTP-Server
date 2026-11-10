@@ -16,4 +16,5 @@ class networkServer {
     ~networkServer();
     int sendAll();
     int startServer();
+    void buildResponse();
 };

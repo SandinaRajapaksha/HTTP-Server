@@ -16,4 +16,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <unordered_map>
 #include <vector>
+
+#define PROTOCOL "HTTP/1.1"
