@@ -20,16 +20,12 @@ httpResponse::httpResponse() {
 }
 
 void httpResponse::buildCompleteResponseHeader() {
-    for (const auto &pair : statusLine) {
-        if (pair.first == "statusDesc") {
-            sendableFullHeaderAndStatusLine += (pair.second + "\t\n");
-            break;
-        }
-        if (statusLine["statusDesc"] == "" && pair.first == "statusCode") {
-            sendableFullHeaderAndStatusLine += (pair.second + "\t\n");
-            break;
-        }
-        sendableFullHeaderAndStatusLine += (pair.second + " ");
+    sendableFullHeaderAndStatusLine += (statusLine["protocol"] + " ");
+    if (statusLine["statusDesc"] == "") {
+        sendableFullHeaderAndStatusLine += (statusLine["statusCode"] + "\t\n");
+    } else {
+        sendableFullHeaderAndStatusLine += (statusLine["statusCode"] + " ");
+        sendableFullHeaderAndStatusLine += (statusLine["statusDesc"] + "\t\n");
     }
 
     for (const auto &pair : headers) {
