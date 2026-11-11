@@ -14,7 +14,11 @@ class networkServer {
   public:
     networkServer();
     ~networkServer();
+
     int sendAll(std::string &message, std::vector<char> &httpBody);
     int startServer();
+    void requestParse();
+    bool malformAndSecurityCheck();
+    void route();
     void buildResponse();
 };

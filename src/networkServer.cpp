@@ -1,7 +1,12 @@
 #include "../include/networkServer.h"
 #include "../include/commonHeader.h"
 #include "../include/requestAndResponseHandling.h"
+#include <cstdint>
+#include <iostream>
 #include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <vector>
 
 networkServer::networkServer() {
     serverFD = socket(AF_INET, SOCK_STREAM, 0);
@@ -48,18 +53,45 @@ int networkServer::startServer() {
             std::cout << strerror(errno) << std::endl;
             return -1;
         }
-        // route and other logic
-        httpResponse serverResponse;
-        serverResponse.statusLine["protocol"] = PROTOCOL;
-        serverResponse.statusLine["statusCode"] = "200";
-        serverResponse.statusLine["statusDesc"] = "OK";
-        serverResponse.headers["Content-Type"] = "text/html";
 
-        serverResponse.buildCompleteResponseBody();
-        serverResponse.headers["Content-Length"] = std::to_string(serverResponse.body.size());
-        serverResponse.buildCompleteResponseHeader();
+        // recv loop
+        std::vector<uint8_t> fullmessage;
+        const int BUFFER_SIZE = 4096;
+        uint8_t buffer[4096];
 
-        sendAll(serverResponse.sendableFullHeaderAndStatusLine, serverResponse.body);
+        int bytesRecieved = 1;
+        while (bytesRecieved > 0) {
+
+            bytesRecieved = 0;
+            bytesRecieved = recv(acceptFD, buffer, sizeof(buffer), 0);
+            if (bytesRecieved < 0) {
+                std::cout << "recv() error" << std::endl;
+                std::cout << strerror(errno) << std::endl;
+            }
+            // partial recv handling on last chunk
+            if (bytesRecieved < BUFFER_SIZE) {
+                for (int i = 0; i < bytesRecieved; i++) {
+                    fullmessage.push_back(buffer[i]);
+                }
+            }
+            // usual buffer append
+            if (bytesRecieved == BUFFER_SIZE) {
+                fullmessage.insert(fullmessage.end(), std::begin(buffer), std::end(buffer));
+            }
+        }
+        // send message to the parser
+
+        // httpResponse serverResponse;
+        // serverResponse.statusLine["protocol"] = PROTOCOL;
+        // serverResponse.statusLine["statusCode"] = "200";
+        // serverResponse.statusLine["statusDesc"] = "OK";
+        // serverResponse.headers["Content-Type"] = "text/html";
+        //
+        // serverResponse.buildCompleteResponseBody();
+        // serverResponse.headers["Content-Length"] = std::to_string(serverResponse.body.size());
+        // serverResponse.buildCompleteResponseHeader();
+        //
+        // sendAll(serverResponse.sendableFullHeaderAndStatusLine, serverResponse.body);
         close(acceptFD);
     }
 
