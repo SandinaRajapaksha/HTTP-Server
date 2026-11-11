@@ -22,3 +22,11 @@
 #include <vector>
 
 #define PROTOCOL "HTTP/1.1"
+
+// status codes
+#define OK "200"
+#define NO_CONTENT "204"
+#define BAD_REQUEST "400"
+#define FORIBIDDEN "403"
+#define NOT_FOUND "404"
+#define INTERNAL_SERVER_ERROR "500"

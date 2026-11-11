@@ -128,3 +128,29 @@ void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
 
     // header and body parser to be implemented later
 }
+
+std::string networkServer::malformAndSecurityCheck(httpRequest clientRequest) {
+    for (auto i : clientRequest.statusLine) {
+        if (i.second == "") {
+            return BAD_REQUEST;
+        }
+    }
+
+    // security checks - esacaping root fix
+    // std::vector<std::string> pathTokens;
+    // std::string pathToken;
+    // std::string fullPathClientRequested = clientRequest.statusLine["requestedPath"];
+    // std::stringstream streamOfPathString(fullPathClientRequested);
+    //
+    // while (std::getline(streamOfPathString, pathToken, '/')) {
+    //     pathTokens.push_back(pathToken);
+    // }
+    //
+    // for (auto i : pathTokens) {
+    //     if (i == "..") {
+    //         return FORIBIDDEN;
+    //     }
+    // }
+
+    return OK;
+}

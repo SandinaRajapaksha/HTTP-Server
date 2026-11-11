@@ -1,7 +1,7 @@
-
-#include "commonHeader.h"
-#include <cstdint>
 #pragma once
+#include "../include/commonHeader.h"
+#include "../include/requestAndResponseHandling.h"
+#include <cstdint>
 
 #define SERVER_PORT 3490
 #define SERVER_IPV4 "192.168.248.48"
@@ -19,7 +19,7 @@ class networkServer {
     int sendAll(std::string &message, std::vector<char> &httpBody);
     int startServer();
     void requestParse(std::vector<uint8_t> &);
-    bool malformAndSecurityCheck();
+    std::string malformAndSecurityCheck(httpRequest);
     void route();
     void buildResponse();
 };
