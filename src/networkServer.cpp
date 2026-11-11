@@ -106,3 +106,25 @@ int networkServer::sendAll(std::string &statusLineAndHeaders, std::vector<char> 
     shutdown(acceptFD, SHUT_WR);
     return sentBytesCountHeader + sentBytesCountBody;
 }
+
+void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
+    std::string fullRequest(RequestVector.begin(), RequestVector.end());
+    httpResponse clientRequest;
+
+    std::vector<std::string> tokens;
+    std::string token;
+
+    std::stringstream streamOfString(fullRequest);
+
+    // splting on only ' '
+    while (std::getline(streamOfString, token, ' ')) {
+        tokens.push_back(token);
+    }
+
+    // status line
+    clientRequest.statusLine["method"] = tokens[0];
+    clientRequest.statusLine["path"] = tokens[1];
+    clientRequest.statusLine["protocol"] = tokens[2];
+
+    // header and body parser to be implemented later
+}

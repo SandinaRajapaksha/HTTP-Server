@@ -1,5 +1,6 @@
 
 #include "commonHeader.h"
+#include <cstdint>
 #pragma once
 
 #define SERVER_PORT 3490
@@ -17,7 +18,7 @@ class networkServer {
 
     int sendAll(std::string &message, std::vector<char> &httpBody);
     int startServer();
-    void requestParse();
+    void requestParse(std::vector<uint8_t> &);
     bool malformAndSecurityCheck();
     void route();
     void buildResponse();

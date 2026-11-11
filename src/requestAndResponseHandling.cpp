@@ -1,5 +1,19 @@
 #include "../include/requestAndResponseHandling.h"
 
+httpRequest::httpRequest() {
+    statusLine["method"] = "";
+    statusLine["requestedPath"] = "";
+    statusLine["protocol"] = PROTOCOL;
+
+    headers["Host"] = "";
+    headers["User-Agent"] = "";
+    headers["Accept"] = "";
+    headers["Content-Type"] = "";
+    headers["Authorization"] = "";
+    headers["Cookie"] = "";
+    headers["Accept-Encoding"] = "";
+    headers["Cache-Control"] = "";
+}
 httpResponse::httpResponse() {
     statusLine["protocol"] = PROTOCOL;
     statusLine["statusCode"] = "";

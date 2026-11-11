@@ -10,6 +10,8 @@
 #include <iostream>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <ranges>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/socket.h>
