@@ -145,20 +145,36 @@ std::string networkServer::malformAndSecurityCheck(httpRequest clientRequest) {
 
 void networkServer::route(httpRequest clientRequest, std::string responseStatusCode) {
     if (responseStatusCode != OK) {
-        std::string reponseBody = "<html><body><h1>" + responseStatusCode + "<br>" + MACRO_NAME_TO_STR(responseStatusCode) + "</h1></body></html>";
-        std::vector<uint8_t> responseBodyVector(reponseBody.begin(), reponseBody.end());
-
-        httpResponse errorResponse;
-        errorResponse.statusLine["protocol"] = PROTOCOL;
-        errorResponse.statusLine["statusCode"] = responseStatusCode;
-        errorResponse.statusLine["statusDesc"] = MACRO_NAME_TO_STR(responseStatusCode);
-
-        errorResponse.headers["Content-Type"] = "text/html";
-        errorResponse.headers["Content-Length"] = std::to_string(responseBodyVector.size());
-
-        errorResponse.buildCompleteResponseBody(responseBodyVector);
-        errorResponse.buildCompleteResponseHeader();
-
-        sendAll(errorResponse.sendableFullHeaderAndStatusLine, errorResponse.body);
+        errorSender(clientRequest, responseStatusCode);
+        return;
     }
+    if (clientRequest.statusLine["requestedPath"] == "/") {
+        // defalut serving file
+    } else {
+        std::ifstream file(clientRequest.statusLine["requestedPath"]);
+        bool fileOpened = file.good(); // Returns true if the file was opened successfully
+        if (!fileOpened) {
+            errorSender(clientRequest, NOT_FOUND);
+            return;
+        }
+    }
+}
+
+void networkServer::errorSender(httpRequest clientRequest, std::string responseStatusCode) {
+    std::string reponseBody = "<html><body><h1>" + responseStatusCode + "<br>" + MACRO_NAME_TO_STR(responseStatusCode) + "</h1></body></html>";
+    std::vector<uint8_t> responseBodyVector(reponseBody.begin(), reponseBody.end());
+
+    httpResponse errorResponse;
+    errorResponse.statusLine["protocol"] = PROTOCOL;
+    errorResponse.statusLine["statusCode"] = responseStatusCode;
+    errorResponse.statusLine["statusDesc"] = MACRO_NAME_TO_STR(responseStatusCode);
+
+    errorResponse.headers["Content-Type"] = "text/html";
+    errorResponse.headers["Content-Length"] = std::to_string(responseBodyVector.size());
+
+    errorResponse.buildCompleteResponseBody(responseBodyVector);
+    errorResponse.buildCompleteResponseHeader();
+
+    sendAll(errorResponse.sendableFullHeaderAndStatusLine, errorResponse.body);
+    return;
 }

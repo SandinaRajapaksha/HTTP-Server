@@ -22,4 +22,5 @@ class networkServer {
     std::string malformAndSecurityCheck(httpRequest);
     void route(httpRequest, std::string);
     void buildResponse();
+    void errorSender(httpRequest, std::string);
 };
