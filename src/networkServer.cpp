@@ -61,7 +61,6 @@ int networkServer::startServer() {
         uint8_t buffer[4096];
 
         int bytesRecieved = 1;
-        // huge bug to fix here
         while (bytesRecieved > 0) {
 
             bytesRecieved = 0;
@@ -88,20 +87,7 @@ int networkServer::startServer() {
             }
         }
         shutdown(acceptFD, SHUT_RD);
-        // send message to the parser
-        std::cout << "req parser called\n";
         requestParse(fullmessage);
-        // httpResponse serverResponse;
-        // serverResponse.statusLine["protocol"] = PROTOCOL;
-        // serverResponse.statusLine["statusCode"] = "200";
-        // serverResponse.statusLine["statusDesc"] = "OK";
-        // serverResponse.headers["Content-Type"] = "text/html";
-        //
-        // serverResponse.buildCompleteResponseBody();
-        // serverResponse.headers["Content-Length"] = std::to_string(serverResponse.body.size());
-        // serverResponse.buildCompleteResponseHeader();
-        //
-        // sendAll(serverResponse.sendableFullHeaderAndStatusLine, serverResponse.body);
         close(acceptFD);
     }
 
@@ -118,7 +104,6 @@ int networkServer::sendAll(std::string &statusLineAndHeaders, std::vector<uint8_
 }
 
 void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
-    std::cout << "inside requestParse\n";
     std::string fullRequest(RequestVector.begin(), RequestVector.end());
     httpRequest clientRequest;
 
@@ -132,33 +117,25 @@ void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
         tokens.push_back(token);
     }
 
-    std::cout << "completed split\n";
     // status line
     clientRequest.statusLine["method"] = tokens[0];
     clientRequest.statusLine["requestedPath"] = tokens[1];
     clientRequest.statusLine["protocol"] = tokens[2];
 
     // header and body parser to be implemented later
-    std::cout << "malform called\n";
     std::string responseStatusCode = malformAndSecurityCheck(clientRequest);
 
-    std::cout << "malform returned : " << responseStatusCode << "\n";
     // send to route
-    std::cout << "route call reached\n";
     route(clientRequest, responseStatusCode);
-    std::cout << "route is over\n";
 }
 
 std::string networkServer::malformAndSecurityCheck(httpRequest clientRequest) {
-    std::cout << "inside malform\n";
     for (auto i : clientRequest.statusLine) {
         if (i.second == "") {
-            std::cout << "inside malform : something missing\n";
             return BAD_REQUEST;
         }
     }
     if (clientRequest.statusLine["method"] != "GET") {
-        std::cout << "inside malform : wrong method\n";
         return BAD_REQUEST;
     }
 
@@ -167,10 +144,7 @@ std::string networkServer::malformAndSecurityCheck(httpRequest clientRequest) {
 }
 
 void networkServer::route(httpRequest clientRequest, std::string responseStatusCode) {
-    std::cout << "entered route";
     if (responseStatusCode != OK) {
-
-        std::cout << "repose code == OK route";
         std::string reponseBody = "<html><body><h1>" + responseStatusCode + "<br>" + MACRO_NAME_TO_STR(responseStatusCode) + "</h1></body></html>";
         std::vector<uint8_t> responseBodyVector(reponseBody.begin(), reponseBody.end());
 
