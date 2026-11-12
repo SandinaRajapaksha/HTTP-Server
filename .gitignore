@@ -1,3 +1,12 @@
+#serving files
+*.html
+*.css
+*.js
+*.jpeg
+*.jpg
+*.png
+*.mp4
+servinFiles/
 # Prerequisites
 *.d
 
