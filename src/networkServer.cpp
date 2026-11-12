@@ -6,6 +6,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <vector>
 
 networkServer::networkServer() {
@@ -60,6 +61,7 @@ int networkServer::startServer() {
         uint8_t buffer[4096];
 
         int bytesRecieved = 1;
+        // huge bug to fix here
         while (bytesRecieved > 0) {
 
             bytesRecieved = 0;
@@ -78,9 +80,17 @@ int networkServer::startServer() {
             if (bytesRecieved == BUFFER_SIZE) {
                 fullmessage.insert(fullmessage.end(), std::begin(buffer), std::end(buffer));
             }
+            if ((char)fullmessage.at(fullmessage.size() - 1) == '\n' &&
+                (char)fullmessage.at(fullmessage.size() - 2) == '\r' &&
+                (char)fullmessage.at(fullmessage.size() - 3) == '\n' &&
+                (char)fullmessage.at(fullmessage.size() - 4) == '\r') {
+                break;
+            }
         }
+        shutdown(acceptFD, SHUT_RD);
         // send message to the parser
-
+        std::cout << "req parser called\n";
+        requestParse(fullmessage);
         // httpResponse serverResponse;
         // serverResponse.statusLine["protocol"] = PROTOCOL;
         // serverResponse.statusLine["statusCode"] = "200";
@@ -98,8 +108,8 @@ int networkServer::startServer() {
     return 0;
 }
 
-int networkServer::sendAll(std::string &statusLineAndHeaders, std::vector<char> &httpBody) {
-
+int networkServer::sendAll(std::string &statusLineAndHeaders, std::vector<uint8_t> &httpBody) {
+    // body sending to be implemented
     std::string bodyMessage(httpBody.begin(), httpBody.end());
     int sentBytesCountHeader = send(acceptFD, statusLineAndHeaders.c_str(), statusLineAndHeaders.size(), 0);
     int sentBytesCountBody = send(acceptFD, bodyMessage.c_str(), bodyMessage.size(), 0);
@@ -108,8 +118,9 @@ int networkServer::sendAll(std::string &statusLineAndHeaders, std::vector<char> 
 }
 
 void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
+    std::cout << "inside requestParse\n";
     std::string fullRequest(RequestVector.begin(), RequestVector.end());
-    httpResponse clientRequest;
+    httpRequest clientRequest;
 
     std::vector<std::string> tokens;
     std::string token;
@@ -121,36 +132,59 @@ void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
         tokens.push_back(token);
     }
 
+    std::cout << "completed split\n";
     // status line
     clientRequest.statusLine["method"] = tokens[0];
-    clientRequest.statusLine["path"] = tokens[1];
+    clientRequest.statusLine["requestedPath"] = tokens[1];
     clientRequest.statusLine["protocol"] = tokens[2];
 
     // header and body parser to be implemented later
+    std::cout << "malform called\n";
+    std::string responseStatusCode = malformAndSecurityCheck(clientRequest);
+
+    std::cout << "malform returned : " << responseStatusCode << "\n";
+    // send to route
+    std::cout << "route call reached\n";
+    route(clientRequest, responseStatusCode);
+    std::cout << "route is over\n";
 }
 
 std::string networkServer::malformAndSecurityCheck(httpRequest clientRequest) {
+    std::cout << "inside malform\n";
     for (auto i : clientRequest.statusLine) {
         if (i.second == "") {
+            std::cout << "inside malform : something missing\n";
             return BAD_REQUEST;
         }
     }
+    if (clientRequest.statusLine["method"] != "GET") {
+        std::cout << "inside malform : wrong method\n";
+        return BAD_REQUEST;
+    }
 
     // security checks - esacaping root fix
-    // std::vector<std::string> pathTokens;
-    // std::string pathToken;
-    // std::string fullPathClientRequested = clientRequest.statusLine["requestedPath"];
-    // std::stringstream streamOfPathString(fullPathClientRequested);
-    //
-    // while (std::getline(streamOfPathString, pathToken, '/')) {
-    //     pathTokens.push_back(pathToken);
-    // }
-    //
-    // for (auto i : pathTokens) {
-    //     if (i == "..") {
-    //         return FORIBIDDEN;
-    //     }
-    // }
-
     return OK;
+}
+
+void networkServer::route(httpRequest clientRequest, std::string responseStatusCode) {
+    std::cout << "entered route";
+    if (responseStatusCode != OK) {
+
+        std::cout << "repose code == OK route";
+        std::string reponseBody = "<html><body><h1>" + responseStatusCode + "<br>" + MACRO_NAME_TO_STR(responseStatusCode) + "</h1></body></html>";
+        std::vector<uint8_t> responseBodyVector(reponseBody.begin(), reponseBody.end());
+
+        httpResponse errorResponse;
+        errorResponse.statusLine["protocol"] = PROTOCOL;
+        errorResponse.statusLine["statusCode"] = responseStatusCode;
+        errorResponse.statusLine["statusDesc"] = MACRO_NAME_TO_STR(responseStatusCode);
+
+        errorResponse.headers["Content-Type"] = "text/html";
+        errorResponse.headers["Content-Length"] = std::to_string(responseBodyVector.size());
+
+        errorResponse.buildCompleteResponseBody(responseBodyVector);
+        errorResponse.buildCompleteResponseHeader();
+
+        sendAll(errorResponse.sendableFullHeaderAndStatusLine, errorResponse.body);
+    }
 }

@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <ranges>
@@ -22,7 +23,7 @@
 #include <vector>
 
 #define PROTOCOL "HTTP/1.1"
-
+#define MACRO_NAME_TO_STR(x) #x
 // status codes
 #define OK "200"
 #define NO_CONTENT "204"

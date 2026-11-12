@@ -1,4 +1,6 @@
 #include "../include/requestAndResponseHandling.h"
+#include <cstdint>
+#include <vector>
 
 httpRequest::httpRequest() {
     statusLine["method"] = "";
@@ -51,8 +53,6 @@ void httpResponse::buildCompleteResponseHeader() {
     sendableFullHeaderAndStatusLine += "\r\n";
 }
 
-void httpResponse::buildCompleteResponseBody() {
-    std::string message = "<html><h1>hello</h1> world </html>";
-    std::vector<char> messageAsCharVector(message.begin(), message.end());
-    body = messageAsCharVector;
+void httpResponse::buildCompleteResponseBody(std::vector<uint8_t> bodyVector) {
+    body = bodyVector;
 }
