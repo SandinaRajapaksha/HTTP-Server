@@ -157,12 +157,16 @@ void networkServer::route(httpRequest clientRequest, std::string responseStatusC
 
         // content type table to be implemented
     } else {
-        std::ifstream file(clientRequest.statusLine["requestedPath"]);
+
+        std::ifstream file(clientRequest.statusLine["requestedPath"], std::ios::binary | std::ios::ate);
         bool fileOpened = file.good(); // Returns true if the file was opened successfully
         if (!fileOpened) {
             errorSender(NOT_FOUND);
             return;
         }
+        std::vector<uint8_t> responseBodyVector = readAll(file);
+        responseSender(responseBodyVector);
+        // finding files
     }
 }
 
