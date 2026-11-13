@@ -22,3 +22,5 @@ struct httpRequest {
     httpRequest();
     void parseThroughOriginalRequest();
 };
+
+std::map<std::string, std::string> buildStatusDescs();

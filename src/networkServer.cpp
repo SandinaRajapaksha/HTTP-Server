@@ -2,6 +2,7 @@
 #include "../include/commonHeader.h"
 #include "../include/requestAndResponseHandling.h"
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <sys/socket.h>
@@ -10,6 +11,10 @@
 #include <vector>
 
 networkServer::networkServer() {
+
+    contentType = contentTypeBuilder();
+    allStatusDesc = buildStatusDescs();
+
     serverFD = socket(AF_INET, SOCK_STREAM, 0);
     if (serverFD < 0) {
         std::cout << strerror(errno) << std::endl;
@@ -153,7 +158,7 @@ void networkServer::route(httpRequest clientRequest, std::string responseStatusC
         std::string defaultFilePath = webRoot + "/" + DEFAULT_FILE;
         std::ifstream file(defaultFilePath, std::ios::binary | std::ios::ate);
         std::vector<uint8_t> responseBodyVector = readAll(file);
-        responseSender(responseBodyVector);
+        responseSender(clientRequest.headers["requestedPath"], responseBodyVector);
 
         // content type table to be implemented
     } else {
@@ -165,13 +170,13 @@ void networkServer::route(httpRequest clientRequest, std::string responseStatusC
             return;
         }
         std::vector<uint8_t> responseBodyVector = readAll(file);
-        responseSender(responseBodyVector);
+        responseSender(clientRequest.statusLine["requestedPath"], responseBodyVector);
         // finding files
     }
 }
 
 void networkServer::errorSender(std::string responseStatusCode) {
-    std::string reponseBody = "<html><body><h1>" + responseStatusCode + "<br>" + MACRO_NAME_TO_STR(responseStatusCode) + "</h1></body></html>";
+    std::string reponseBody = "<html><body><h1>" + responseStatusCode + "<br>" + allStatusDesc[responseStatusCode] + "</h1></body></html>";
     std::vector<uint8_t> responseBodyVector(reponseBody.begin(), reponseBody.end());
 
     httpResponse errorResponse;
@@ -189,14 +194,17 @@ void networkServer::errorSender(std::string responseStatusCode) {
     return;
 }
 
-void networkServer::responseSender(std::vector<uint8_t> &responseBodyVector) {
+void networkServer::responseSender(std::string filepath, std::vector<uint8_t> &responseBodyVector) {
+
+    std::filesystem::path p(filepath);
+    std::string extention = p.extension().string();
 
     httpResponse serverResponse;
     serverResponse.statusLine["protocol"] = PROTOCOL;
     serverResponse.statusLine["statusCode"] = OK;
     serverResponse.statusLine["statusDesc"] = "OK";
 
-    serverResponse.headers["Content-Type"] = "text/html";
+    serverResponse.headers["Content-Type"] = contentType[extention];
     serverResponse.headers["Content-Length"] = std::to_string(responseBodyVector.size());
 
     serverResponse.buildCompleteResponseBody(responseBodyVector);
@@ -221,4 +229,38 @@ std::vector<uint8_t> networkServer::readAll(std::ifstream &file) {
     }
 
     return buffer;
+};
+
+std::map<std::string, std::string> contentTypeBuilder() {
+
+    std::map<std::string, std::string> fileType = {
+        // text
+        {".html", "text/html"},
+        {".htm", "text/html"},
+        {".css", "text/css"},
+        {".js", "text/javascript"},
+        {".txt", "text/plain"},
+        {".csv", "text/csv"},
+        {".xml", "application/xml"},
+        {".json", "application/json"},
+        {".pdf", "application/pdf"},
+        {".zip", "application/zip"},
+        // images
+        {".png", "image/png"},
+        {".jpg", "image/jpeg"},
+        {".jpeg", "image/jpeg"},
+        {".gif", "image/gif"},
+        {".svg", "image/svg+xml"},
+        {".webp", "image/webp"},
+        {".ico", "image/x-icon"},
+        // fonts
+        {".woff", "font/woff"},
+        {".woff2", "font/woff2"},
+        {".ttf", "font/ttf"},
+        // media
+        {".mp3", "audio/mpeg"},
+        {".mp4", "video/mp4"},
+        {".webm", "video/webm"},
+    };
+    return fileType;
 };

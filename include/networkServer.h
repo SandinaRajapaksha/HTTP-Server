@@ -12,6 +12,9 @@
 class networkServer {
   private:
     std::string webRoot = WEB_ROOT;
+    std::map<std::string, std::string> allStatusDesc;
+    std::map<std::string, std::string> contentType;
+
     int serverFD;
     int acceptFD;
     sockaddr_in serverAddr;
@@ -28,5 +31,7 @@ class networkServer {
     void buildResponse();
     void errorSender(std::string);
     std::vector<uint8_t> readAll(std::ifstream &file);
-    void responseSender(std::vector<uint8_t> &);
+    void responseSender(std::string, std::vector<uint8_t> &);
 };
+
+std::map<std::string, std::string> contentTypeBuilder();

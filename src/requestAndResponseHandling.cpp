@@ -56,3 +56,15 @@ void httpResponse::buildCompleteResponseHeader() {
 void httpResponse::buildCompleteResponseBody(std::vector<uint8_t> bodyVector) {
     body = bodyVector;
 }
+
+std::map<std::string, std::string> buildStatusDescs() {
+    std::map<std::string, std::string> allStatusDesc;
+    allStatusDesc[OK] = "OK";
+    allStatusDesc[NO_CONTENT] = "NO CONTENT";
+    allStatusDesc[BAD_REQUEST] = "BAD REQUEST";
+    allStatusDesc[FORIBIDDEN] = "FORIBIDDEN";
+    allStatusDesc[NOT_FOUND] = "NOT FOUND";
+    allStatusDesc[INTERNAL_SERVER_ERROR] = "INTERNAL SERVER ERROR";
+
+    return allStatusDesc;
+}
