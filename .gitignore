@@ -6,7 +6,7 @@
 *.jpg
 *.png
 *.mp4
-servinFiles/
+servingFiles/
 # Prerequisites
 *.d
 

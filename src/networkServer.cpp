@@ -119,7 +119,7 @@ void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
 
     // status line
     clientRequest.statusLine["method"] = tokens[0];
-    clientRequest.statusLine["requestedPath"] = tokens[1];
+    clientRequest.statusLine["requestedPath"] = WEB_ROOT + tokens[1];
     clientRequest.statusLine["protocol"] = tokens[2];
 
     // header and body parser to be implemented later
@@ -145,22 +145,28 @@ std::string networkServer::malformAndSecurityCheck(httpRequest clientRequest) {
 
 void networkServer::route(httpRequest clientRequest, std::string responseStatusCode) {
     if (responseStatusCode != OK) {
-        errorSender(clientRequest, responseStatusCode);
+        errorSender(responseStatusCode);
         return;
     }
-    if (clientRequest.statusLine["requestedPath"] == "/") {
+    if (clientRequest.statusLine["requestedPath"] == (webRoot + "/")) {
         // defalut serving file
+        std::string defaultFilePath = webRoot + "/" + DEFAULT_FILE;
+        std::ifstream file(defaultFilePath, std::ios::binary | std::ios::ate);
+        std::vector<uint8_t> responseBodyVector = readAll(file);
+        responseSender(responseBodyVector);
+
+        // content type table to be implemented
     } else {
         std::ifstream file(clientRequest.statusLine["requestedPath"]);
         bool fileOpened = file.good(); // Returns true if the file was opened successfully
         if (!fileOpened) {
-            errorSender(clientRequest, NOT_FOUND);
+            errorSender(NOT_FOUND);
             return;
         }
     }
 }
 
-void networkServer::errorSender(httpRequest clientRequest, std::string responseStatusCode) {
+void networkServer::errorSender(std::string responseStatusCode) {
     std::string reponseBody = "<html><body><h1>" + responseStatusCode + "<br>" + MACRO_NAME_TO_STR(responseStatusCode) + "</h1></body></html>";
     std::vector<uint8_t> responseBodyVector(reponseBody.begin(), reponseBody.end());
 
@@ -178,3 +184,37 @@ void networkServer::errorSender(httpRequest clientRequest, std::string responseS
     sendAll(errorResponse.sendableFullHeaderAndStatusLine, errorResponse.body);
     return;
 }
+
+void networkServer::responseSender(std::vector<uint8_t> &responseBodyVector) {
+
+    httpResponse serverResponse;
+    serverResponse.statusLine["protocol"] = PROTOCOL;
+    serverResponse.statusLine["statusCode"] = OK;
+    serverResponse.statusLine["statusDesc"] = "OK";
+
+    serverResponse.headers["Content-Type"] = "text/html";
+    serverResponse.headers["Content-Length"] = std::to_string(responseBodyVector.size());
+
+    serverResponse.buildCompleteResponseBody(responseBodyVector);
+    serverResponse.buildCompleteResponseHeader();
+
+    sendAll(serverResponse.sendableFullHeaderAndStatusLine, serverResponse.body);
+    return;
+}
+
+std::vector<uint8_t> networkServer::readAll(std::ifstream &file) {
+    if (!file) {
+        std::cerr << "Failed to open file.\n";
+    }
+    // Get size and return cursor to the beginning
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Allocate buffer and read raw bytes
+    std::vector<uint8_t> buffer(size);
+    if (file.read((char *)buffer.data(), size)) {
+        std::cout << "Successfully read " << file.gcount() << " bytes.\n";
+    }
+
+    return buffer;
+};
