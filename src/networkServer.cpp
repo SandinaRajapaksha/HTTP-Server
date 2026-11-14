@@ -1,14 +1,6 @@
 #include "../include/networkServer.h"
 #include "../include/commonHeader.h"
 #include "../include/requestAndResponseHandling.h"
-#include <cstdint>
-#include <filesystem>
-#include <iostream>
-#include <string>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <vector>
 
 networkServer::networkServer() {
 
@@ -104,7 +96,7 @@ int networkServer::sendAll(std::string &statusLineAndHeaders, std::vector<uint8_
     std::string bodyMessage(httpBody.begin(), httpBody.end());
     int sentBytesCountHeader = send(acceptFD, statusLineAndHeaders.c_str(), statusLineAndHeaders.size(), 0);
     int sentBytesCountBody = send(acceptFD, bodyMessage.c_str(), bodyMessage.size(), 0);
-    shutdown(acceptFD, SHUT_WR);
+    close(acceptFD);
     return sentBytesCountHeader + sentBytesCountBody;
 }
 
@@ -124,8 +116,9 @@ void networkServer::requestParse(std::vector<uint8_t> &RequestVector) {
 
     // status line
     clientRequest.statusLine["method"] = tokens[0];
-    clientRequest.statusLine["requestedPath"] = WEB_ROOT + tokens[1];
+    clientRequest.statusLine["requestedPath"] = WEB_ROOT + stripQuery(tokens[1]);
     clientRequest.statusLine["protocol"] = tokens[2];
+    std::cout << clientRequest.statusLine["requestedPath"] << std::endl;
 
     // header and body parser to be implemented later
     std::string responseStatusCode = malformAndSecurityCheck(clientRequest);
@@ -264,3 +257,12 @@ std::map<std::string, std::string> contentTypeBuilder() {
     };
     return fileType;
 };
+
+// shitty path cleaning like /jpg?234
+std::string stripQuery(const std::string &target) {
+    size_t pos = target.find('?');
+    if (pos == std::string::npos) {
+        return target;
+    }
+    return target.substr(0, pos);
+}

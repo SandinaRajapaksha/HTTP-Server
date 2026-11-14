@@ -23,15 +23,16 @@ class networkServer {
     networkServer();
     ~networkServer();
 
-    int sendAll(std::string &message, std::vector<uint8_t> &httpBody);
+    int sendAll(std::string &, std::vector<uint8_t> &);
     int startServer();
     void requestParse(std::vector<uint8_t> &);
     std::string malformAndSecurityCheck(httpRequest);
     void route(httpRequest, std::string);
     void buildResponse();
     void errorSender(std::string);
-    std::vector<uint8_t> readAll(std::ifstream &file);
+    std::vector<uint8_t> readAll(std::ifstream &);
     void responseSender(std::string, std::vector<uint8_t> &);
 };
 
 std::map<std::string, std::string> contentTypeBuilder();
+std::string stripQuery(const std::string &);

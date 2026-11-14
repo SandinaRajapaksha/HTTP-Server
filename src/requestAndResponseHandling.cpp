@@ -1,6 +1,4 @@
 #include "../include/requestAndResponseHandling.h"
-#include <cstdint>
-#include <vector>
 
 httpRequest::httpRequest() {
     statusLine["method"] = "";
